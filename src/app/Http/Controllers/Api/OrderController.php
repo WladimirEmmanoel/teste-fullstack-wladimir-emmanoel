@@ -50,8 +50,13 @@ class OrderController extends Controller
      */
     public function metrics(): JsonResponse
     {
+        $metrics = $this->orderService->metrics();
+
         return ApiResponse::success(
-            $this->orderService->metrics()
+            data: $metrics['data'],
+            meta: [
+                'cached_time' => $metrics['cached_time'],
+            ]
         );
     }
 

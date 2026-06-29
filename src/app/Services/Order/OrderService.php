@@ -43,7 +43,10 @@ class OrderService
         return Cache::store('redis')->remember(
             'orders:metrics',
             now()->addMinutes(5),
-            fn() => $this->OrderMetricsRepository->metrics()
+            fn() => [
+                'data' => $this->OrderMetricsRepository->metrics(),
+                'cached_time' => now()->toISOString(),
+            ]
         );
     }
 
