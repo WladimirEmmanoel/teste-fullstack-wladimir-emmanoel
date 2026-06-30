@@ -31,74 +31,127 @@
         <div v-if="store.loading" class="space-y-2">
             <div v-for="n in 5" :key="n" class="h-10 bg-gray-100 animate-pulse rounded" />
         </div>
-        
+
         <div v-else-if="store.orders.length === 0"
             class="text-center text-gray-500 py-6">
             Nenhum pedido encontrado.
         </div>
 
-        <table v-else class="w-full text-sm border">
-            <thead>
-                <tr class="border-b text-left text-gray-500">
-                    <th>
-                        <input type="checkbox"
-                            :checked="store.selected.length === store.orders.length"
-                            @change="store.toggleSelectAll"
-                        />
-                    </th>
+        <div v-else>
+            <div class="hidden md:block">
+                <table class="w-full text-sm border">
+                    <thead>
+                        <tr class="border-b text-left text-gray-500">
+                            <th>
+                                <input type="checkbox"
+                                    :checked="store.selected.length === store.orders.length"
+                                    @change="store.toggleSelectAll"
+                                />
+                            </th>
 
-                    <th @click="store.toggleSort('id')" class="cursor-pointer">ID</th>
-                    <th>ID Afiliado</th>
-                    <th @click="store.toggleSort('total_value')" class="cursor-pointer">Valor</th>
-                    <th>Status</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
+                            <th @click="store.toggleSort('id')" class="cursor-pointer">ID</th>
+                            <th @click="store.toggleSort('total_value')" class="cursor-pointer">ID Afiliado</th>
+                            <th @click="store.toggleSort('total_value')" class="cursor-pointer">Valor</th>
+                            <th @click="store.toggleSort('total_value')" class="cursor-pointer">Status</th>
+                            <th @click="store.toggleSort('total_value')" class="cursor-pointer">Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
 
-            <tbody>
-                <tr v-for="order in store.orders"
+                    <tbody>
+                        <tr v-for="order in store.orders"
+                            :key="order.id"
+                            class="border-b hover:bg-gray-50 cursor-pointer"
+                            @click="openDrawer(order)">
+
+                            <td>
+                                <input type="checkbox"
+                                    :checked="store.selected.includes(order.id)"
+                                    @click.stop="store.toggleSelect(order.id)"
+                                />
+                            </td>
+
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.affiliate?.id ?? '-' }}</td>
+                            <td>R$ {{ order.total_value }}</td>
+                            <td>{{ store.statuses[order.status]?.name ?? order.status }}</td>
+                            <td>{{ formatDate(order.created_at) }}</td>
+
+                            <td @click.stop>
+                                <div class="relative group">
+                                    <button class="text-blue-500">Ações</button>
+
+                                    <div class="absolute hidden group-hover:block bg-white border shadow rounded p-2 z-10">
+                                        <button
+                                            v-for="action in availableActions(order.status)"
+                                            :key="action.value"
+                                            class="block w-full text-left px-2 py-1 hover:bg-gray-100"
+                                            @click="updateStatus(order.id, action.value)"
+                                        >
+                                            {{ action.label }}
+                                        </button>
+
+                                        <div v-if="availableActions(order.status).length === 0"
+                                            class="text-xs text-gray-400">
+                                            Sem ações
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid gap-3 md:hidden">
+                <div
+                    v-for="order in store.orders"
                     :key="order.id"
-                    class="border-b hover:bg-gray-50 cursor-pointer"
-                    @click="openDrawer(order)">
+                    class="border rounded-lg p-3 shadow-sm bg-white cursor-pointer active:scale-[0.99] transition"
+                    @click="openDrawer(order)"
+                >
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">#{{ order.id }}</div>
 
-                    <td>
-                        <input type="checkbox"
+                        <input
+                            type="checkbox"
                             :checked="store.selected.includes(order.id)"
                             @click.stop="store.toggleSelect(order.id)"
                         />
-                    </td>
+                    </div>
 
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.affiliate?.id ?? '-' }}</td>
-                    <td>R$ {{ order.total_value }}</td>
-                    <td>{{ store.statuses[order.status]?.name ?? order.status }}</td>
-                    <td>{{ formatDate(order.created_at) }}</td>
-
-                    <td @click.stop>
-                        <div class="relative group">
-                            <button class="text-blue-500">Ações</button>
-
-                            <div class="absolute hidden group-hover:block bg-white border shadow rounded p-2 z-10">
-                                <button
-                                    v-for="action in availableActions(order.status)"
-                                    :key="action.value"
-                                    class="block w-full text-left px-2 py-1 hover:bg-gray-100"
-                                    @click="updateStatus(order.id, action.value)"
-                                >
-                                    {{ action.label }}
-                                </button>
-
-                                <div v-if="availableActions(order.status).length === 0"
-                                    class="text-xs text-gray-400">
-                                    Sem ações
-                                </div>
-                            </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <div><strong>Afiliado:</strong> {{ order.affiliate?.id ?? '-' }}</div>
+                        <div><strong>Valor:</strong> R$ {{ order.total_value }}</div>
+                        <div>
+                            <strong>Status:</strong>
+                            {{ store.statuses[order.status]?.name ?? order.status }}
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        <div>
+                            <strong>Data:</strong>
+                            {{ formatDate(order.created_at) }}
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex gap-2 flex-wrap" @click.stop>
+                        <button
+                            v-for="action in availableActions(order.status)"
+                            :key="action.value"
+                            class="text-xs px-2 py-1 border rounded hover:bg-gray-100"
+                            @click="updateStatus(order.id, action.value)"
+                        >
+                            {{ action.label }}
+                        </button>
+
+                        <span v-if="availableActions(order.status).length === 0"
+                            class="text-xs text-gray-400">
+                            Sem ações
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="flex justify-between mt-4 text-sm">
             <div>Total: {{ store.meta.total }}</div>
 
