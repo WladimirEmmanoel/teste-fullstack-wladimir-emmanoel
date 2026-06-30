@@ -39,6 +39,8 @@ class OrderIndexRequest extends FormRequest
             'sort_by' => [
                 'nullable',
                 Rule::in([
+                    'id',
+                    'affiliate_id',
                     'total_value',
                     'status',
                     'created_at',

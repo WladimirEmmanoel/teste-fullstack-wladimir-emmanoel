@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderIndexRequest;
 use App\Http\Requests\UpdateOrderStatusRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -50,8 +51,13 @@ class OrderController extends Controller
      */
     public function metrics(): JsonResponse
     {
+        $metrics = $this->orderService->metrics();
+
         return ApiResponse::success(
-            $this->orderService->metrics()
+            data: $metrics['data'],
+            meta: [
+                'cached_time' => $metrics['cached_time'],
+            ]
         );
     }
 
@@ -65,6 +71,26 @@ class OrderController extends Controller
                 $order,
                 $request->integer('status')
             )
+        );
+    }
+
+    /**
+     * Retorna todos os status do Pedido
+     */
+    public function orderStatus(): JsonResponse
+    {
+        return ApiResponse::success(
+            $this->orderService->statuses()
+        );
+    }
+
+    /**
+     * Atualiza o Status de multiplos pedidos
+     */
+    public function updateMultipleStatus(Request $request): JsonResponse
+    {
+        return ApiResponse::error(
+            "Ops, em construção.."
         );
     }
 }

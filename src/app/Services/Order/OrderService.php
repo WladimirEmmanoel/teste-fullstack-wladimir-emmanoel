@@ -43,7 +43,10 @@ class OrderService
         return Cache::store('redis')->remember(
             'orders:metrics',
             now()->addMinutes(5),
-            fn() => $this->OrderMetricsRepository->metrics()
+            fn() => [
+                'data' => $this->OrderMetricsRepository->metrics(),
+                'cached_time' => now()->toISOString(),
+            ]
         );
     }
 
@@ -75,5 +78,22 @@ class OrderService
 
         return $this->orderRepository
             ->findWithRelations($order->refresh());
+    }
+
+    /**
+     * Retorna um array com o valor e o nome do status do pedido
+     */
+    public function statuses(): array
+    {
+        $statuses = [];
+
+        foreach (OrderStatus::cases() as $status) {
+            $statuses[$status->value] = [
+                'id' => $status->value,
+                'name' => $status->label(),
+            ];
+        }
+
+        return $statuses;
     }
 }

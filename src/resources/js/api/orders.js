@@ -1,17 +1,24 @@
-import http from './http';
+import api from './axios';
 
 export function getOrders(params = {}) {
-    return http.get('/orders', { params });
+    const response = await api.get('/orders', { params });
+    return response.data.data;
 }
 
 export function getMetrics() {
-    return http.get('/orders/metrics');
+    const response = await api.get('/orders/metrics');
+    return response.data.data;
 }
 
 export function getOrder(id) {
-    return http.get(`/orders/${id}`);
+    const response = await api.get(`/orders/${id}`);
+    return response.data.data;
 }
 
 export function updateStatus(id, status) {
-    return http.post(`/orders/${id}/status`, { status });
+    const response = await api.patch(`/orders/${id}/status`, {
+        status,
+    });
+
+    return response.data.data;
 }post

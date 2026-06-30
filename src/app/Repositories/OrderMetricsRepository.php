@@ -57,7 +57,7 @@ class OrderMetricsRepository
                 ->pluck('total', 'status')
                 ->toArray(),
 
-            // Taxa de cancelamento
+            // Porcentagem de cancelamento
             'cancel_rate' => $this->cancelRate(
                 $query,
                 $totalOrders
@@ -66,7 +66,7 @@ class OrderMetricsRepository
     }
 
     /**
-     * Calcula a taxa de cancelamento.
+     * Calcula a porcentagem  de cancelamento.
      */
     private function cancelRate(Builder $query, int $totalOrders): float
     {
