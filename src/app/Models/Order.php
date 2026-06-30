@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Order extends Model
 {
@@ -27,6 +28,18 @@ class Order extends Model
         ];
     }
     
+    protected $appends = [
+        'status_name',
+    ];
+    
+    // Retorna o nome do status do pedido.
+    protected function statusName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status->label(),
+        );
+    }
+
     public function affiliate(): BelongsTo
     {
         return $this->belongsTo(Affiliate::class);
