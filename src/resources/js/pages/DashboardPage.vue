@@ -52,6 +52,9 @@
             />
         </div>
     </div>
+    
+    <!-- Filtros da tabela de pedidos -->
+    <OrdersFilters/>
 
     <!-- Tabela de pedidos -->
     <OrdersTable />
@@ -59,36 +62,52 @@
 </template>
 
 <script setup>
-    import { onMounted, onUnmounted} from 'vue';
+    import { onMounted, onUnmounted } from 'vue';
     import { storeToRefs } from 'pinia';
+    import { useRoute, useRouter } from 'vue-router';
     import { useOrderStore } from '../stores/orderStore';
 
     import MetricsCard from '../components/dashboard/MetricsCard.vue';
     import OrdersTable from '../components/dashboard/OrdersTable.vue';
+    import OrdersFilters from '../components/dashboard/OrdersFilters.vue';
 
     const store = useOrderStore();
+    const route = useRoute();
+    const router = useRouter();
 
     let interval = null;
+    const { metrics } = storeToRefs(store);
 
-    const { 
-        metrics,
-        orders,
-        loading,
-        error,
-    } = storeToRefs(store);
+    onMounted(async () => {
+        await router.isReady();
+        
+        // Pegar a query da URL
+        const query = route.query ?? {};
+         
+        // Preencher a store com os Filtros
+        store.filters.search = query.search ?? '';
+        store.filters.status = query.status ? Number(query.status) : null;
+        store.filters.date_from = query.date_from ?? null;
+        store.filters.date_to = query.date_to ?? null;
+        store.filters.min_value = query.min_value ?? null;
+        store.filters.max_value = query.max_value ?? null;
 
-    /*
-        Atualiza as metricas a cada 1 minuto.
-    */
-    onMounted(() => {
+        // Buscar os status
+        await store.fetchStatuses();
+
+        // Buscar as Metricas
         store.fetchMetrics();
 
+        // Buscar os pedidos
+        store.fetchOrders();
+
+        // Atualiza as métricas a cada 1 minuto
         interval = setInterval(() => {
             store.fetchMetrics();
         }, 60000);
     });
 
     onUnmounted(() => {
-        clearInterval(interval)
+        clearInterval(interval);
     });
 </script>

@@ -14,7 +14,8 @@ class OrderRepository
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        $query = Order::query();
+        $query = Order::query()
+            ->with('affiliate:id,email');
 
         if (! empty($filters['affiliate_id'])) {
             $query->where('affiliate_id', $filters['affiliate_id']);
@@ -40,9 +41,20 @@ class OrderRepository
             $query->where('total_value', '<=', $filters['max_value']);
         }
 
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortDir = $filters['sort_dir'] ?? 'desc';
+
+        $allowedSorts = [
+            'id' => 'id',
+            'affiliate_id' => 'affiliate_id',
+            'total_value' => 'total_value',
+            'status' => 'status',
+            'created_at' => 'created_at',
+        ];
+
         $query->orderBy(
-            $filters['sort_by'] ?? 'created_at',
-            $filters['sort_dir'] ?? 'desc'
+            $allowedSorts[$sortBy] ?? 'created_at',
+            in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc'
         );
 
         return $query->paginate(20);
